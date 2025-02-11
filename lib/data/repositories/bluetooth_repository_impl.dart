@@ -10,12 +10,15 @@ import 'package:interview_flutter_fogo/data/models/bluetooth_device_model.dart';
 class BluetoothRepositoryImpl implements BluetoothRepository {
   @override
   Stream<List<BluetoothDeviceModel>> scanDevices() async* {
-    final hasPermissions = await BluetoothPermissionHandler.checkAndRequestPermissions();
-    if (!hasPermissions) {
-      throw BluetoothPermissionException('Bluetooth permissions not granted');
+    final permissionsGranted = await BluetoothPermissionHandler.arePermissionsGranted();
+
+    if (!permissionsGranted) {
+      final permissionsRequested = await BluetoothPermissionHandler.checkAndRequestPermissions();
+      if (!permissionsRequested) {
+        throw BluetoothPermissionException('Bluetooth permissions not granted');
+      }
     }
 
-    // Check if Bluetooth is turned on
     if (await FlutterBluePlus.adapterState.first == BluetoothAdapterState.off) {
       throw BluetoothDisabledException('Bluetooth is turned off');
     }
