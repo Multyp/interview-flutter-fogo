@@ -1,29 +1,38 @@
+// Global imports
 import 'dart:io';
 
+// Local imports
 import 'package:permission_handler/permission_handler.dart';
+
 
 class BluetoothPermissionHandler {
   static Future<bool> checkAndRequestPermissions() async {
-
-    // For Android 12+ we need both bluetooth scan and location permissions
     if (Platform.isAndroid) {
       final bluetoothScan = await Permission.bluetoothScan.status;
-      final bluetoothConnect = await Permission.bluetoothConnect.status;
-      final location = await Permission.locationWhenInUse.status;
-
-      if (!bluetoothScan.isGranted || !bluetoothConnect.isGranted || !location.isGranted) {
-        final results = await Future.wait([
-          Permission.bluetoothScan.request(),
-          Permission.bluetoothConnect.request(),
-          Permission.locationWhenInUse.request(),
-        ]);
-
-        return results.every((status) => status.isGranted);
+      if (!bluetoothScan.isGranted) {
+        final scanResult = await Permission.bluetoothScan.request();
+        if (!scanResult.isGranted) {
+          return false;
+        }
       }
+
+      final bluetoothConnect = await Permission.bluetoothConnect.status;
+      if (!bluetoothConnect.isGranted) {
+        final connectResult = await Permission.bluetoothConnect.request();
+        if (!connectResult.isGranted) {
+          return false;
+        }
+      }
+
+      final location = await Permission.locationWhenInUse.status;
+      if (!location.isGranted) {
+        final locationResult = await Permission.locationWhenInUse.request();
+        return locationResult.isGranted;
+      }
+
       return true;
     }
 
-    // For iOS we need bluetooth permission
     if (Platform.isIOS) {
       final bluetooth = await Permission.bluetooth.status;
       if (!bluetooth.isGranted) {
@@ -32,6 +41,26 @@ class BluetoothPermissionHandler {
       }
       return true;
     }
+
+    return false;
+  }
+
+  static Future<bool> arePermissionsGranted() async {
+    if (Platform.isAndroid) {
+      final bluetoothScan = await Permission.bluetoothScan.status;
+      final bluetoothConnect = await Permission.bluetoothConnect.status;
+      final location = await Permission.locationWhenInUse.status;
+
+      return bluetoothScan.isGranted &&
+             bluetoothConnect.isGranted &&
+             location.isGranted;
+    }
+
+    if (Platform.isIOS) {
+      final bluetooth = await Permission.bluetooth.status;
+      return bluetooth.isGranted;
+    }
+
     return false;
   }
 }
