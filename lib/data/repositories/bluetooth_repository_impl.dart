@@ -8,12 +8,20 @@ import 'package:interview_flutter_fogo/core/permission_handler.dart';
 import 'package:interview_flutter_fogo/data/models/bluetooth_device_model.dart';
 
 class BluetoothRepositoryImpl implements BluetoothRepository {
+  final BluetoothPermissionHandler _permissionHandler;
+
+  BluetoothRepositoryImpl({
+    BluetoothPermissionHandler? permissionHandler,
+  }) : _permissionHandler =
+            permissionHandler ?? BluetoothPermissionHandlerImpl();
+
   @override
   Stream<List<BluetoothDeviceModel>> scanDevices() async* {
-    final permissionsGranted = await BluetoothPermissionHandler.arePermissionsGranted();
+    final permissionsGranted = await _permissionHandler.arePermissionsGranted();
 
     if (!permissionsGranted) {
-      final permissionsRequested = await BluetoothPermissionHandler.checkAndRequestPermissions();
+      final permissionsRequested =
+          await _permissionHandler.checkAndRequestPermissions();
       if (!permissionsRequested) {
         throw BluetoothPermissionException('Bluetooth permissions not granted');
       }
@@ -28,12 +36,14 @@ class BluetoothRepositoryImpl implements BluetoothRepository {
 
       yield* FlutterBluePlus.scanResults.map((results) {
         return results
-          .where((r) => r.device.platformName.isNotEmpty) // Filter out devices with no name
-          .map((r) => BluetoothDeviceModel(
-            name: r.device.platformName,
-            address: r.device.remoteId.toString(),
-            rssi: r.rssi,
-          )).toList();
+            .where((r) => r.device.platformName
+                .isNotEmpty) // Filter out devices with no name
+            .map((r) => BluetoothDeviceModel(
+                  name: r.device.platformName,
+                  address: r.device.remoteId.toString(),
+                  rssi: r.rssi,
+                ))
+            .toList();
       });
     } catch (e) {
       throw BluetoothScanException('Failed to scan: ${e.toString()}');

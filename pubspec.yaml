@@ -34,13 +34,27 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+
+  # The following adds Flutter Blue plus to your application for Bluetooth Low Energy
   flutter_blue_plus: ^1.35.2
+
+  # The following adds Flutter Bloc to your application for state management
   flutter_bloc: ^9.0.0
+
+  # The following adds permission handler to your application for handling permissions
   permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
+
+  # The following are various dependencies for teh test suite
+  # they include, bloc_test, mockito, and build_runner
+  # those allow use to mock objects, run tests, and generate code
+  bloc_test: ^10.0.0
+  mockito: ^5.4.5
+  build_runner: ^2.4.15
+
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is

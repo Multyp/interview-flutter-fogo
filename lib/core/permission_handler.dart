@@ -4,9 +4,14 @@ import 'dart:io';
 // Local imports
 import 'package:permission_handler/permission_handler.dart';
 
+abstract class BluetoothPermissionHandler {
+  Future<bool> arePermissionsGranted();
+  Future<bool> checkAndRequestPermissions();
+}
 
-class BluetoothPermissionHandler {
-  static Future<bool> checkAndRequestPermissions() async {
+class BluetoothPermissionHandlerImpl implements BluetoothPermissionHandler {
+  @override
+  Future<bool> checkAndRequestPermissions() async {
     if (Platform.isAndroid) {
       final bluetoothScan = await Permission.bluetoothScan.status;
       if (!bluetoothScan.isGranted) {
@@ -45,15 +50,16 @@ class BluetoothPermissionHandler {
     return false;
   }
 
-  static Future<bool> arePermissionsGranted() async {
+  @override
+  Future<bool> arePermissionsGranted() async {
     if (Platform.isAndroid) {
       final bluetoothScan = await Permission.bluetoothScan.status;
       final bluetoothConnect = await Permission.bluetoothConnect.status;
       final location = await Permission.locationWhenInUse.status;
 
       return bluetoothScan.isGranted &&
-             bluetoothConnect.isGranted &&
-             location.isGranted;
+          bluetoothConnect.isGranted &&
+          location.isGranted;
     }
 
     if (Platform.isIOS) {
