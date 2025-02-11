@@ -14,138 +14,167 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[100],
-      body: SafeArea(
-        child: BlocConsumer<BluetoothScanBloc, BluetoothScanState>(
-          listener: (context, state) {
-            if (state is BluetoothScanError) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(state.message),
-                  backgroundColor: Colors.red[400],
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  margin: EdgeInsets.all(16),
-                ),
-              );
-            }
-          },
-          builder: (context, state) {
-            return CustomScrollView(
-              slivers: [
-                SliverAppBar(
-                  floating: true,
-                  title: Text(
-                    'Bluetooth Devices',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
-                    ),
-                  ),
-                  backgroundColor: Colors.grey[100],
-                  elevation: 0,
-                  actions: [
-                    if (state is BluetoothScanLoading)
-                      Padding(
-                        padding: EdgeInsets.only(right: 16),
-                        child: Center(
-                          child: SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.blue[400]!,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-                SliverToBoxAdapter(
-                  child: _buildBody(context, state),
+      backgroundColor: Colors.white,
+      body: BlocConsumer<BluetoothScanBloc, BluetoothScanState>(
+        listener: (context, state) {
+          if (state is BluetoothScanError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red.shade400,
+                behavior: SnackBarBehavior.floating,
+                margin: const EdgeInsets.all(16),
+              ),
+            );
+          }
+        },
+        builder: (context, state) {
+          return SafeArea(
+            child: Column(
+              children: [
+                _buildHeader(context, state),
+                Expanded(
+                  child: _buildDevicesList(context, state),
                 ),
               ],
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
-      floatingActionButton: _buildScanButton(context),
     );
   }
 
-  Widget _buildBody(BuildContext context, BluetoothScanState state) {
+  Widget _buildHeader(BuildContext context, BluetoothScanState state) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Bluetooth Scanner',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.black87,
+            ),
+          ),
+          const SizedBox(height: 16),
+          _buildScanButton(context, state),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScanButton(BuildContext context, BluetoothScanState state) {
+    final isScanning = state.isScanning;
+
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: () {
+          if (isScanning) {
+            context.read<BluetoothScanBloc>().add(StopScan());
+          } else {
+            context.read<BluetoothScanBloc>().add(StartScan());
+          }
+        },
+        icon: Icon(
+          isScanning ? Icons.stop_rounded : Icons.bluetooth_searching_rounded,
+          color: Colors.white,
+        ),
+        label: Text(
+          isScanning ? 'Stop Scanning' : 'Start Scan',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: isScanning ? Colors.red.shade400 : Colors.blue.shade500,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDevicesList(BuildContext context, BluetoothScanState state) {
     if (state is BluetoothScanLoading) {
       return Center(
-        child: Padding(
-          padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.3),
-          child: Column(
-            children: [
-              CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.blue[400]!),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              valueColor: AlwaysStoppedAnimation<Color>(Colors.blue.shade400),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Scanning for devices...',
+              style: TextStyle(
+                color: Colors.black54,
+                fontSize: 16,
               ),
-              SizedBox(height: 24),
-              Text(
-                'Scanning for devices...',
-                style: TextStyle(
-                  color: Colors.black54,
-                  fontSize: 16,
-                ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (state is BluetoothScanLoaded && state.devices.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.bluetooth_disabled_rounded,
+              size: 48,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No devices found',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Pull down to refresh',
+              style: TextStyle(
+                color: Colors.grey.shade600,
+                fontSize: 14,
+              ),
+            ),
+          ],
         ),
       );
     }
 
     if (state is BluetoothScanLoaded) {
-      if (state.devices.isEmpty) {
-        return Center(
-          child: Padding(
-            padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.3),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.bluetooth_disabled_rounded,
-                  size: 64,
-                  color: Colors.grey[400],
-                ),
-                SizedBox(height: 24),
-                Text(
-                  'No devices found',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black87,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Pull down to refresh',
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      }
-
       return RefreshIndicator(
         onRefresh: () async {
           context.read<BluetoothScanBloc>().add(StartScan());
         },
-        color: Colors.blue[400],
-        child: ListView.builder(
-          padding: EdgeInsets.fromLTRB(16, 8, 16, 100),
-          shrinkWrap: true,
-          physics: NeverScrollableScrollPhysics(),
+        color: Colors.blue.shade400,
+        child: ListView.separated(
+          padding: const EdgeInsets.all(16),
           itemCount: state.devices.length,
+          separatorBuilder: (context, index) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             return BluetoothDeviceTile(
               device: state.devices[index],
@@ -159,55 +188,24 @@ class HomePage extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: EdgeInsets.only(top: MediaQuery.of(context).size.height * 0.3),
-        child: Column(
-          children: [
-            Icon(
-              Icons.bluetooth_searching_rounded,
-              size: 64,
-              color: Colors.blue[400],
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.bluetooth_searching_rounded,
+            size: 48,
+            color: Colors.blue.shade400,
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Start scanning to find devices',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
             ),
-            SizedBox(height: 24),
-            Text(
-              'Start Scanning',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScanButton(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: 16),
-      child: BlocBuilder<BluetoothScanBloc, BluetoothScanState>(
-        builder: (context, state) {
-          final bool isScanning = state.isScanning;
-
-          return FloatingActionButton.extended(
-            onPressed: () {
-              if (isScanning) {
-                context.read<BluetoothScanBloc>().add(StopScan());
-              } else {
-                context.read<BluetoothScanBloc>().add(StartScan());
-              }
-            },
-            icon: Icon(
-              isScanning 
-                  ? Icons.stop_rounded
-                  : Icons.bluetooth_searching_rounded,
-            ),
-            label: Text(isScanning ? 'Stop' : 'Scan'),
-            elevation: 2,
-            backgroundColor: isScanning ? Colors.red[400] : Colors.blue[400],
-          );
-        },
+          ),
+        ],
       ),
     );
   }
