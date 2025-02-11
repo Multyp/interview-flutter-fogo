@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:interview_flutter_fogo/core/bluetooth_exceptions.dart';
-import 'package:interview_flutter_fogo/data/models/bluetooth_device_model.dart';
 import 'package:interview_flutter_fogo/data/repositories/bluetooth_repository_impl.dart';
 import 'package:mockito/mockito.dart';
 import 'package:mockito/annotations.dart';
