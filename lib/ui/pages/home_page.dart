@@ -20,10 +20,17 @@ class HomePage extends StatelessWidget {
           if (state is BluetoothScanError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
+                content: Row(
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.white),
+                    SizedBox(width: 8),
+                    Expanded(child: Text(state.message)),
+                  ],
+                ),
                 backgroundColor: Colors.red.shade400,
                 behavior: SnackBarBehavior.floating,
                 margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 4),
               ),
             );
           }
@@ -101,7 +108,8 @@ class HomePage extends StatelessWidget {
           ),
         ),
         style: ElevatedButton.styleFrom(
-          backgroundColor: isScanning ? Colors.red.shade400 : Colors.blue.shade500,
+          backgroundColor:
+              isScanning ? Colors.red.shade400 : Colors.blue.shade500,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),

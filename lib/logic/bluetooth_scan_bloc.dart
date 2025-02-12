@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 // Local imports
 import 'package:interview_flutter_fogo/core/bluetooth_repository.dart';
+import 'package:interview_flutter_fogo/core/error_formatter.dart';
 import 'package:interview_flutter_fogo/logic/bluetooth_scan_event.dart';
 import 'package:interview_flutter_fogo/logic/bluetooth_scan_state.dart';
 
@@ -25,7 +26,8 @@ class BluetoothScanBloc extends Bloc<BluetoothScanEvent, BluetoothScanState> {
           },
           onError: (error) {
             if (!emit.isDone) {
-              emit(BluetoothScanError(error.toString()));
+              emit(BluetoothScanError(
+                  ErrorFormatter.formatBluetoothError(error)));
             }
             completer.complete();
           },
@@ -37,7 +39,7 @@ class BluetoothScanBloc extends Bloc<BluetoothScanEvent, BluetoothScanState> {
         await completer.future;
       } catch (e) {
         if (!emit.isDone) {
-          emit(BluetoothScanError(e.toString()));
+          emit(BluetoothScanError(ErrorFormatter.formatBluetoothError(e)));
         }
       }
     });
